@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Golden Grid</title>
+<title>Golden Gradient Grid</title>
 <style>
   :root{
     --black:      #050504;
@@ -27,37 +27,53 @@
 
   .layer{ position:absolute; inset:0; }
 
-  /* ---------- ambient secondary grid: large cells, faint, slow opposite drift ---------- */
+  /* ---------- ambient secondary grid: large cells, faint, drifting the opposite way ---------- */
   .grid-fine{
-    background-image:
-      repeating-linear-gradient(0deg,  rgba(232,199,106,.06) 0, rgba(232,199,106,.06) 1px, transparent 1px, transparent calc(var(--grid-size)*4)),
-      repeating-linear-gradient(90deg, rgba(232,199,106,.06) 0, rgba(232,199,106,.06) 1px, transparent 1px, transparent calc(var(--grid-size)*4));
-    animation: gridDriftFine var(--cycle) linear infinite;
+    background: linear-gradient(115deg, #4a2f0c 0%, #cdb968 24%, #fff2cf 48%, #e0a53e 66%, #4a2f0c 100%);
+    background-size: 260% 260%;
+    -webkit-mask-image:
+      repeating-linear-gradient(0deg,  black 0, black 1px, transparent 1px, transparent calc(var(--grid-size)*4)),
+      repeating-linear-gradient(90deg, black 0, black 1px, transparent 1px, transparent calc(var(--grid-size)*4));
+    mask-image:
+      repeating-linear-gradient(0deg,  black 0, black 1px, transparent 1px, transparent calc(var(--grid-size)*4)),
+      repeating-linear-gradient(90deg, black 0, black 1px, transparent 1px, transparent calc(var(--grid-size)*4));
+    opacity:.28;
+    animation: maskDriftFine var(--cycle) linear infinite, gradientShift calc(var(--cycle)*1.4) ease-in-out infinite;
     z-index:0;
   }
 
-  @keyframes gridDriftFine{
-    0%   { background-position: 0 0, 0 0; }
-    100% { background-position: calc(var(--grid-size)*-4) calc(var(--grid-size)*-4), calc(var(--grid-size)*-4) calc(var(--grid-size)*-4); }
+  @keyframes maskDriftFine{
+    0%   { -webkit-mask-position: 0 0, 0 0;       mask-position: 0 0, 0 0; }
+    100% { -webkit-mask-position: calc(var(--grid-size)*-4) calc(var(--grid-size)*-4), calc(var(--grid-size)*-4) calc(var(--grid-size)*-4);
+           mask-position: calc(var(--grid-size)*-4) calc(var(--grid-size)*-4), calc(var(--grid-size)*-4) calc(var(--grid-size)*-4); }
   }
 
-  /* ---------- base grid: golden lines, visible throughout ---------- */
+  /* ---------- base grid: lines filled with a moving golden gradient ---------- */
   .grid-base{
-    background-image:
-      repeating-linear-gradient(0deg,  rgba(215,178,96,.32) 0, rgba(215,178,96,.32) 1px, transparent 1px, transparent var(--grid-size)),
-      repeating-linear-gradient(90deg, rgba(215,178,96,.32) 0, rgba(215,178,96,.32) 1px, transparent 1px, transparent var(--grid-size));
-    animation: gridDrift var(--cycle) linear infinite, gridPulse var(--cycle) ease-in-out infinite;
+    background: linear-gradient(115deg, #5c3a10 0%, #cdb968 22%, #fff3d2 45%, #f0b94a 62%, #7a4a12 82%, #cdb968 100%);
+    background-size: 300% 300%;
+    -webkit-mask-image:
+      repeating-linear-gradient(0deg,  black 0, black 1px, transparent 1px, transparent var(--grid-size)),
+      repeating-linear-gradient(90deg, black 0, black 1px, transparent 1px, transparent var(--grid-size));
+    mask-image:
+      repeating-linear-gradient(0deg,  black 0, black 1px, transparent 1px, transparent var(--grid-size)),
+      repeating-linear-gradient(90deg, black 0, black 1px, transparent 1px, transparent var(--grid-size));
+    filter: drop-shadow(0 0 1.4px rgba(255,224,150,.55));
+    animation: maskDrift var(--cycle) linear infinite, gradientShift var(--cycle) ease-in-out infinite;
     z-index:1;
   }
 
-  @keyframes gridDrift{
-    0%   { background-position: 0 0, 0 0; }
-    100% { background-position: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size); }
+  @keyframes maskDrift{
+    0%   { -webkit-mask-position: 0 0, 0 0;                                   mask-position: 0 0, 0 0; }
+    100% { -webkit-mask-position: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size);
+           mask-position: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size); }
   }
 
-  @keyframes gridPulse{
-    0%, 100% { opacity:.85; }
-    50%      { opacity:1; }
+  /* the gold flows across the grid: amber -> bright gold -> pale cream -> amber, back and forth */
+  @keyframes gradientShift{
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   /* ---------- vignette: keeps the black grounded, fades grid at the edges ---------- */
