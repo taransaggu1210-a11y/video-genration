@@ -493,21 +493,26 @@
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
-    const DAMPING = 0.0052; // per ms — gradual glide toward the target (~900-1100ms settle)
     const INPUT_SCALE = 0.6; // softens how far a single scroll gesture travels
+    const OMEGA = 0.0058; // rad/ms — critically-damped spring, ~1s settle with a smooth ramp in AND out
 
     let target = window.scrollY;
     let current = window.scrollY;
+    let velocity = 0;
     let raf = null;
     let lastTime = null;
 
     function loop(now){
       const dt = lastTime == null ? 16.67 : Math.min(now - lastTime, 48);
       lastTime = now;
-      const factor = 1 - Math.exp(-DAMPING * dt);
-      current += (target - current) * factor;
-      if (Math.abs(target - current) < 0.4){
+      // critically-damped spring: accelerates smoothly from rest, then eases into the target
+      // (no instant jump to peak speed, unlike a plain exponential chase)
+      const accel = OMEGA * OMEGA * (target - current) - 2 * OMEGA * velocity;
+      velocity += accel * dt;
+      current += velocity * dt;
+      if (Math.abs(target - current) < 0.4 && Math.abs(velocity) < 0.05){
         current = target;
+        velocity = 0;
         window.scrollTo({ top: current, left: 0, behavior: 'instant' });
         raf = null;
         lastTime = null;
@@ -524,7 +529,7 @@
       if (raf == null){ lastTime = null; raf = requestAnimationFrame(loop); }
     }
 
-    function resync(){ target = window.scrollY; current = target; }
+    function resync(){ target = window.scrollY; current = target; velocity = 0; }
 
     window.addEventListener('wheel', onWheel, { passive:false });
     window.addEventListener('resize', resync);
