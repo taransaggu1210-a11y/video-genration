@@ -492,7 +492,7 @@
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
-    const DAMPING = 0.006; // per ms — slow, gradual glide toward the target (~700-900ms settle)
+    const DAMPING = 0.0052; // per ms — gradual glide toward the target (~900-1100ms settle)
     const INPUT_SCALE = 0.6; // softens how far a single scroll gesture travels
 
     let target = window.scrollY;
