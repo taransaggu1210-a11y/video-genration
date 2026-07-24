@@ -27,7 +27,8 @@
   }
 
   *{ box-sizing:border-box; }
-  html{ scroll-behavior:smooth; }
+  /* scrolling is eased entirely by JS below; scroll-behavior:smooth is intentionally
+     omitted here so the browser never layers its own smoothing on top of ours */
   html,body{
     margin:0; padding:0; background:var(--bg); color:var(--ink);
     font-family:var(--mono);
@@ -507,12 +508,12 @@
       current += (target - current) * factor;
       if (Math.abs(target - current) < 0.4){
         current = target;
-        window.scrollTo(0, current);
+        window.scrollTo({ top: current, left: 0, behavior: 'instant' });
         raf = null;
         lastTime = null;
         return;
       }
-      window.scrollTo(0, current);
+      window.scrollTo({ top: current, left: 0, behavior: 'instant' });
       raf = requestAnimationFrame(loop);
     }
 
