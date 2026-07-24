@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DG3 — Terminal</title>
+<style>
+  :root{
+    --bg:            #060605;
+    --bg-raised:     #0d0d0b;
+    --line:          #1c1c19;
+    --line-soft:     #141412;
+    --ink:           #f2f1ea;
+    --ink-dim:       #8a8a82;
+    --ink-faint:     #55554f;
+    --green:         #35d67c;
+    --green-dim:     #16351f;
+    --red:           #ff5c5c;
+    --red-dim:       #3a1414;
+    --cyan:          #4fd8e0;
+    --gold:          #cdb968;
+    --amber:         #e0a53e;
+    --emerald:       #3fae86;
+    --blue:          #5b8fe0;
+    --radius:        3px;
+    --mono: ui-monospace, "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  html,body{
+    margin:0; padding:0; background:var(--bg); color:var(--ink);
+    font-family:var(--mono);
+    -webkit-font-smoothing:antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  ::selection{ background:var(--green); color:#04140b; }
+  a{ color:inherit; text-decoration:none; }
+  button{ font-family:inherit; color:inherit; }
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:40;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:24px;
+    padding:0 20px;
+    height:56px;
+    background:var(--bg);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-left{ display:flex; align-items:center; gap:34px; }
+  .logo{ display:flex; align-items:center; gap:2px; font-weight:700; font-size:17px; letter-spacing:.5px; color:var(--ink); white-space:nowrap; }
+  .logo .chev{ color:var(--green); }
+
+  .stat{ display:flex; flex-direction:column; gap:3px; line-height:1; }
+  .stat-label{ font-size:10px; letter-spacing:.09em; color:var(--ink-faint); }
+  .stat-value{ font-size:14px; font-weight:600; }
+  .stat-value.neutral{ color:var(--ink-dim); }
+  .stat-value.up{ color:var(--green); }
+  .stat-value.down{ color:var(--red); }
+  .stat-value.cyan{ color:var(--cyan); }
+
+  .topbar-right{ display:flex; align-items:center; gap:10px; }
+  .pill{
+    display:flex; align-items:center; gap:6px;
+    height:32px; padding:0 12px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    font-size:11px; letter-spacing:.05em; font-weight:600;
+    background:var(--bg-raised);
+    white-space:nowrap;
+  }
+  .pill .pill-val{ color:var(--red); }
+  .pill-deposit{
+    background:var(--gold); color:#191605; border-color:var(--gold);
+    cursor:pointer;
+  }
+  .pill-toggle{ color:var(--ink-dim); }
+  .dot-live{ width:6px; height:6px; border-radius:50%; background:var(--green); display:inline-block; box-shadow:0 0 6px var(--green); }
+  .avatar{
+    width:32px; height:32px; border-radius:50%;
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:var(--ink-dim);
+    position:relative;
+    background:var(--bg-raised);
+  }
+  .avatar::after{
+    content:""; position:absolute; right:-1px; bottom:-1px;
+    width:8px; height:8px; border-radius:50%;
+    background:var(--green); border:2px solid var(--bg);
+  }
+
+  /* ---------- deck bar ---------- */
+  .deckbar{
+    position:sticky; top:56px; z-index:39;
+    display:flex; align-items:center; gap:22px;
+    height:40px; padding:0 20px;
+    background:var(--bg);
+    border-bottom:1px solid var(--line-soft);
+    font-size:12.5px;
+  }
+  .deck-tab{ display:flex; align-items:center; gap:8px; color:var(--ink); }
+  .deck-tab .dot{ width:6px; height:6px; border-radius:50%; background:var(--ink-dim); }
+  .deck-new{ color:var(--ink-faint); }
+  .deck-new:hover{ color:var(--ink-dim); }
+
+  /* ---------- hero ---------- */
+  .hero{ padding:56px 20px 30px; text-align:center; }
+  .hero-flag{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:11px; letter-spacing:.12em; color:var(--ink-faint);
+    margin-bottom:22px;
+  }
+  .hero-flag .sq{ width:7px; height:7px; background:var(--green); display:inline-block; }
+  .hero h1{
+    margin:0; font-size:38px; line-height:1.18; font-weight:600;
+    color:var(--ink); letter-spacing:-0.01em;
+    text-wrap:balance;
+  }
+
+  .search{
+    max-width:935px; margin:34px auto 0;
+    display:flex; align-items:center; gap:12px;
+    border:1px solid var(--line); border-radius:6px;
+    background:var(--bg-raised);
+    padding:0 18px; height:56px;
+    transition:border-color .15s ease;
+  }
+  .search:focus-within{ border-color:var(--ink-faint); }
+  .search input{
+    flex:1; background:transparent; border:0; outline:0;
+    color:var(--ink); font-family:inherit; font-size:14.5px;
+  }
+  .search input::placeholder{ color:var(--ink-faint); }
+  .search-icon{ color:var(--ink-faint); flex-shrink:0; }
+  .search-go{
+    width:30px; height:30px; border-radius:5px; border:1px solid var(--line);
+    background:transparent; color:var(--ink-faint);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    flex-shrink:0;
+  }
+  .search-go:hover{ border-color:var(--ink-dim); color:var(--ink); }
+
+  .try-row{
+    max-width:935px; margin:26px auto 0;
+    display:flex; flex-wrap:wrap; justify-content:center; gap:14px;
+  }
+  .try-label{ font-size:13px; color:var(--ink-faint); align-self:center; margin-right:2px; }
+  .chip{
+    display:flex; align-items:center; gap:10px;
+    border:1px solid var(--line); border-radius:6px;
+    padding:9px 16px; font-size:13px; color:var(--ink-dim);
+    cursor:pointer; transition:border-color .15s ease, color .15s ease;
+  }
+  .chip:hover{ border-color:var(--ink-faint); color:var(--ink); }
+  .chip-tag{
+    font-size:9.5px; font-weight:700; letter-spacing:.06em;
+    padding:2px 6px; border-radius:3px;
+  }
+  .chip-tag.soccer{ background:var(--green-dim); color:var(--emerald); }
+  .chip-tag.esports{ background:#101c30; color:var(--blue); }
+
+  /* ---------- streams ---------- */
+  .streams{ max-width:1920px; margin:0 auto; padding:44px 20px 90px; }
+  .streams-head{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    padding-bottom:14px; border-bottom:1px solid var(--line-soft);
+    margin-bottom:22px;
+    position:relative;
+  }
+  .streams-title{
+    display:flex; align-items:center; gap:8px;
+    font-size:12px; font-weight:700; letter-spacing:.08em; color:var(--ink);
+  }
+  .streams-title .bar{ width:2px; height:14px; background:var(--ink-faint); display:inline-block; }
+
+  .dropdown{ position:relative; transform-origin:top left; transition:transform .32s cubic-bezier(.22,.85,.3,1.2); }
+  .dropdown.zoomed{ transform:scale(1.5); z-index:60; }
+  .dd-btn{
+    display:flex; align-items:center; gap:8px;
+    height:30px; padding:0 12px; font-size:12px; color:var(--ink-dim);
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:4px;
+    cursor:pointer; white-space:nowrap;
+  }
+  .dropdown.open .dd-btn{ border-color:var(--ink-faint); color:var(--ink); }
+  .dd-btn .caret{ transition:transform .18s ease; font-size:9px; color:var(--ink-faint); }
+  .dropdown.open .dd-btn .caret{ transform:rotate(180deg); }
+
+  .dd-menu{
+    position:absolute; top:calc(100% + 6px); left:0; min-width:150px;
+    background:#0a0a09; border:1px solid var(--line); border-radius:5px;
+    padding:6px; display:none; flex-direction:column; gap:1px;
+    box-shadow:0 12px 30px rgba(0,0,0,.55);
+    z-index:60;
+  }
+  .dropdown.open .dd-menu{ display:flex; }
+  .dd-item{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 10px; font-size:12.5px; color:var(--ink-dim);
+    border-radius:3px; cursor:pointer;
+  }
+  .dd-item:hover{ background:#151512; color:var(--ink); }
+  .dd-item.active{ color:var(--green); }
+  .dd-item .check{ color:var(--green); font-size:11px; }
+
+  .filter-input{
+    display:flex; align-items:center; gap:8px;
+    height:30px; padding:0 10px; font-size:12px; color:var(--ink-faint);
+    border:1px solid transparent; border-radius:4px;
+    flex:1; min-width:160px;
+  }
+  .filter-input input{
+    flex:1; background:transparent; border:0; outline:0; color:var(--ink);
+    font-family:inherit; font-size:12px;
+  }
+  .filter-input input::placeholder{ color:var(--ink-faint); }
+  .manage-link{
+    margin-left:auto; font-size:12px; color:var(--ink-faint);
+    display:flex; align-items:center; gap:6px;
+  }
+  .manage-link:hover{ color:var(--ink-dim); }
+
+  .grid{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:14px;
+  }
+  .card{
+    border:1px solid var(--line); border-radius:6px;
+    background:var(--bg-raised);
+    padding:16px; display:flex; flex-direction:column; gap:12px;
+    border-top:2px solid var(--line);
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .card:hover{ border-color:var(--ink-faint); }
+  .card.hot{ border-top-color:var(--emerald); }
+  .card-top{ display:flex; align-items:center; justify-content:space-between; font-size:11px; }
+  .card-cat{ display:flex; align-items:center; gap:6px; font-weight:700; letter-spacing:.05em; }
+  .card-cat .dot{ width:6px; height:6px; border-radius:50%; }
+  .card-cat.basketball{ color:var(--amber); }
+  .card-cat.basketball .dot{ background:var(--amber); }
+  .card-cat.soccer{ color:var(--emerald); }
+  .card-cat.soccer .dot{ background:var(--emerald); }
+  .card-vol{ color:var(--ink-faint); display:flex; align-items:center; gap:6px; }
+  .card-title{ font-size:14.5px; line-height:1.35; color:var(--ink); font-weight:500; min-height:40px; }
+  .card-meta{ display:flex; align-items:center; gap:8px; font-size:10.5px; color:var(--ink-faint); }
+  .card-meta .rule{
+    display:flex; align-items:center; gap:4px; border:1px solid var(--line); border-radius:3px; padding:2px 6px;
+  }
+  .outcome{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 14px; border-radius:4px; font-weight:700; font-size:13px;
+    border:1px solid transparent;
+  }
+  .outcome.yes{ background:var(--green-dim); color:var(--green); border-color:#1e4a2c; }
+  .outcome.no{ background:var(--red-dim); color:var(--red); border-color:#552323; }
+  .outcome .price{ font-size:16px; }
+  .card-src{
+    align-self:flex-start; font-size:9.5px; font-weight:700; letter-spacing:.05em;
+    color:var(--blue); border:1px solid #1c2c46; background:#0c1526;
+    padding:2px 7px; border-radius:3px;
+  }
+
+  /* ---------- footer status bar ---------- */
+  .statusbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:30;
+    display:flex; align-items:center; justify-content:space-between;
+    height:30px; padding:0 16px;
+    background:var(--bg); border-top:1px solid var(--line);
+    font-size:11px; color:var(--ink-faint);
+  }
+  .statusbar-left{ display:flex; align-items:center; gap:18px; }
+  .statusbar-left span{ display:flex; align-items:center; gap:6px; }
+  .statusbar .dot{ width:6px; height:6px; border-radius:50%; background:var(--green); }
+  .statusbar-right{ display:flex; align-items:center; gap:14px; }
+  .statusbar-right svg{ opacity:.6; }
+  .statusbar-right svg:hover{ opacity:1; }
+
+  main{ padding-bottom:30px; }
+
+  @media (max-width:1400px){ .grid{ grid-template-columns:repeat(3,1fr); } }
+  @media (max-width:1000px){ .grid{ grid-template-columns:repeat(2,1fr); } .topbar-left{ gap:18px; } }
+  @media (max-width:680px){ .grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo"><span class="chev">›|</span> DG3</div>
+      <div class="stat">
+        <div class="stat-label">BALANCE</div>
+        <div class="stat-value" id="stat-balance">$11,560</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">TODAY P&amp;L</div>
+        <div class="stat-value up" id="stat-pnl">+$270</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">OPEN</div>
+        <div class="stat-value" id="stat-open">8</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">FILL SPEED</div>
+        <div class="stat-value cyan" id="stat-fill">312ms</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">AVG CLV</div>
+        <div class="stat-value down">-0.1¢</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="pill">PORTFOLIO <span class="pill-val">-91.23%</span></div>
+      <div class="pill pill-deposit">DEPOSIT</div>
+      <div class="pill pill-toggle"><span class="dot-live" style="background:var(--ink-faint); box-shadow:none;"></span> 1-CLICK OFF</div>
+      <div class="avatar">TA</div>
+    </div>
+  </header>
+
+  <div class="deckbar">
+    <div class="deck-tab"><span class="dot"></span> Deck 1</div>
+    <div class="deck-new">+ New deck</div>
+  </div>
+
+  <main>
+    <section class="hero">
+      <div class="hero-flag"><span class="sq"></span> DECK READY · SIGNAL ENGINE CALIBRATED</div>
+      <h1>What markets are you<br />watching today?</h1>
+
+      <div class="search">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M21 21l-3.6-3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input type="text" placeholder="Search a market, team, event or ask a question…" />
+        <button class="search-go" aria-label="Search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+      <div class="try-row">
+        <span class="try-label">Try:</span>
+        <div class="chip"><span class="chip-tag soccer">SOCCER</span> Europa Conference League</div>
+        <div class="chip"><span class="chip-tag soccer">SOCCER</span> Primera División Argentina</div>
+        <div class="chip"><span class="chip-tag esports">ESPORTS</span> League of Legends</div>
+        <div class="chip"><span class="chip-tag esports">ESPORTS</span> Counter Strike</div>
+      </div>
+    </section>
+
+    <section class="streams">
+      <div class="streams-head">
+        <div class="streams-title"><span class="bar"></span> MY STREAMS</div>
+
+        <div class="dropdown" id="dd-sort">
+          <button class="dd-btn" type="button">Sort: <span id="sort-label">Volume</span> <span class="caret">▾</span></button>
+          <div class="dd-menu">
+            <div class="dd-item" data-value="Ending soon">Ending soon</div>
+            <div class="dd-item active" data-value="Volume">Volume <span class="check">✓</span></div>
+            <div class="dd-item" data-value="Liquidity">Liquidity</div>
+            <div class="dd-item" data-value="New markets">New markets</div>
+            <div class="dd-item" data-value="Trending (24h)">Trending (24h)</div>
+          </div>
+        </div>
+
+        <div class="dropdown" id="dd-streams">
+          <button class="dd-btn" type="button">Streams: <span id="streams-label">All</span> <span class="caret">▾</span></button>
+          <div class="dd-menu">
+            <div class="dd-item active" data-value="All">All <span class="check">✓</span></div>
+            <div class="dd-item" data-value="Baseball">Baseball</div>
+            <div class="dd-item" data-value="Basketball">Basketball</div>
+            <div class="dd-item" data-value="Cricket">Cricket</div>
+            <div class="dd-item" data-value="Soccer">Soccer</div>
+          </div>
+        </div>
+
+        <div class="filter-input">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-6.2-7-11.4A7 7 0 0 1 19 9.6C19 14.8 12 21 12 21Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="9.5" r="2.2" stroke="currentColor" stroke-width="1.6"/></svg>
+          <input type="text" placeholder="Filter markets..." />
+        </div>
+
+        <div class="manage-link">Manage streams <span>→</span></div>
+      </div>
+
+      <div class="grid" id="card-grid">
+        <!-- cards injected by JS -->
+      </div>
+    </section>
+  </main>
+
+  <div class="statusbar">
+    <div class="statusbar-left">
+      <span><span class="dot"></span> PRICES LIVE</span>
+      <span>• POLYMARKET</span>
+      <span>More venues coming soon</span>
+    </div>
+    <div class="statusbar-right">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23.3 22h-7l-5.5-7.2L4.5 22H1.4l8.1-9.3L1 2h7.2l5 6.6L18.9 2Zm-1.2 18h1.7L7.4 4h-1.8l12.1 16Z"/></svg>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20.3 5.4A18 18 0 0 0 15.7 4l-.3.6a13 13 0 0 1 4 1.5 15 15 0 0 0-14.8 0 13 13 0 0 1 4-1.5L8.3 4a18 18 0 0 0-4.6 1.4C.9 10 0 14.4.3 18.8A18 18 0 0 0 5.7 21l.9-1.3a11 11 0 0 1-1.8-.9l.5-.4a13 13 0 0 0 11.4 0l.5.4a11 11 0 0 1-1.8.9l.9 1.3a18 18 0 0 0 5.4-2.2c.5-5.4-.8-9.7-3.7-13.4ZM8.6 15.6c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2c1 0 1.8.9 1.7 2 0 1.1-.7 2-1.7 2Zm6.8 0c-.9 0-1.7-.9-1.7-2s.8-2 1.7-2c1 0 1.8.9 1.7 2 0 1.1-.7 2-1.7 2Z"/></svg>
+    </div>
+  </div>
+
+<script>
+  const CARDS = [
+    { cat:'basketball', vol:'4.5M', title:'Will LeBron James play for the Miami Heat in 2026-27?', spr:'14¢', yes:42, no:58 },
+    { cat:'basketball', vol:'4.5M', title:'Will LeBron James play for the Golden State Warriors in 2026-27?', spr:'62¢', yes:18, no:83 },
+    { cat:'basketball', vol:'3.8M', title:'Will LeBron James play for the Cleveland Cavaliers in 2026-27?', spr:'48¢', yes:27, no:74, hot:true },
+    { cat:'soccer',     vol:'3.1M', title:'Will Columbus Crew win the 2026 MLS Cup?', spr:'98¢', yes:1, no:99 },
+    { cat:'soccer',     vol:'2.9M', title:'Will Real Salt Lake win the 2026 MLS Cup?', spr:'96¢', yes:98, no:2 },
+    { cat:'basketball', vol:'2.6M', title:'Will Ebuka Okorie win the 2026-27 NBA Rookie of the Year?', spr:'100¢', yes:0, no:100 },
+    { cat:'basketball', vol:'2.6M', title:'Will LeBron James play for the Los Angeles Lakers in 2026-27?', spr:'100¢', yes:1, no:100 },
+    { cat:'basketball', vol:'2.3M', title:'Will LeBron James play for the Philadelphia 76ers in 2026-27?', spr:'84¢', yes:9, no:91 },
+    { cat:'soccer',     vol:'2.3M', title:'Will Orlando City SC win the 2026 MLS Cup?', spr:'98¢', yes:1, no:99 },
+    { cat:'soccer',     vol:'2M',   title:'Will Charlotte FC win the 2026 MLS Cup?', spr:'98¢', yes:2, no:99 },
+    { cat:'basketball', vol:'1.8M', title:'Will Tarris Reed Jr. win the 2026-27 NBA Rookie of the Year?', spr:'100¢', yes:0, no:100 },
+    { cat:'basketball', vol:'1.8M', title:'Will LeBron James play for the San Antonio Spurs in 2026-27?', spr:'98¢', yes:100, no:1 },
+  ];
+
+  const catDot = { basketball:'BASKETBALL', soccer:'SOCCER' };
+
+  function renderCards(){
+    const grid = document.getElementById('card-grid');
+    grid.innerHTML = CARDS.map(c => `
+      <div class="card${c.hot ? ' hot' : ''}">
+        <div class="card-top">
+          <div class="card-cat ${c.cat}"><span class="dot"></span>${catDot[c.cat]}</div>
+          <div class="card-vol">${c.vol} <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="card-title">${c.title}</div>
+        <div class="card-meta">
+          <span class="rule">RULE <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span>24 Jul</span>
+          <span>${c.spr} SPR</span>
+        </div>
+        <div class="outcome yes"><span>YES</span><span class="price">${c.yes}¢</span></div>
+        <div class="outcome no"><span>NO</span><span class="price">${c.no}¢</span></div>
+        <div class="card-src">POLYMARKET</div>
+      </div>
+    `).join('');
+  }
+  renderCards();
+
+  /* ---------- dropdowns: click-to-open + 1.5x zoom ---------- */
+  function setupDropdown(id, labelId){
+    const wrap = document.getElementById(id);
+    const btn = wrap.querySelector('.dd-btn');
+    const items = wrap.querySelectorAll('.dd-item');
+    const label = document.getElementById(labelId);
+
+    function closeOthers(){
+      document.querySelectorAll('.dropdown.open').forEach(d => {
+        if (d !== wrap){ d.classList.remove('zoomed'); d.classList.remove('open'); }
+      });
+    }
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = wrap.classList.contains('open');
+      closeOthers();
+      if (isOpen){
+        wrap.classList.remove('zoomed');
+        wrap.classList.remove('open');
+      } else {
+        wrap.classList.add('open');
+        requestAnimationFrame(() => wrap.classList.add('zoomed'));
+      }
+    });
+
+    items.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        items.forEach(i => { i.classList.remove('active'); i.querySelector('.check')?.remove(); });
+        item.classList.add('active');
+        item.insertAdjacentHTML('beforeend', '<span class="check">✓</span>');
+        label.textContent = item.dataset.value;
+        wrap.classList.remove('zoomed');
+        wrap.classList.remove('open');
+      });
+    });
+  }
+  setupDropdown('dd-sort', 'sort-label');
+  setupDropdown('dd-streams', 'streams-label');
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown.open').forEach(d => { d.classList.remove('zoomed'); d.classList.remove('open'); });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape'){
+      document.querySelectorAll('.dropdown.open').forEach(d => { d.classList.remove('zoomed'); d.classList.remove('open'); });
+    }
+  });
+
+  /* ---------- smooth eased scrolling ---------- */
+  (function smoothScroll(){
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let target = window.scrollY;
+    let current = window.scrollY;
+    let ticking = false;
+    const ease = 0.14;
+    const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
+
+    function onWheel(e){
+      if (e.ctrlKey) return; // let pinch-zoom through
+      e.preventDefault();
+      target = Math.max(0, Math.min(target + e.deltaY, maxScroll()));
+      if (!ticking){ ticking = true; requestAnimationFrame(step); }
+    }
+
+    function step(){
+      current += (target - current) * ease;
+      if (Math.abs(target - current) < 0.4){
+        current = target;
+        window.scrollTo(0, current);
+        ticking = false;
+        return;
+      }
+      window.scrollTo(0, current);
+      requestAnimationFrame(step);
+    }
+
+    function resync(){ target = window.scrollY; current = window.scrollY; }
+
+    window.addEventListener('wheel', onWheel, { passive:false });
+    window.addEventListener('resize', resync);
+    window.addEventListener('keyup', (e) => {
+      if (['ArrowDown','ArrowUp','PageDown','PageUp','Home','End',' '].includes(e.key)) resync();
+    });
+  })();
+</script>
+
+</body>
+</html>
