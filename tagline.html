@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DG3 — Tagline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #060605;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:var(--bg);
+    overflow:hidden;
+  }
+  body{
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .stage{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:.15em;
+    padding:0 6vw;
+    text-align:center;
+  }
+
+  .line{
+    text-align:center;
+  }
+
+  .word{
+    font-family:"IBM Plex Sans", ui-sans-serif, "Helvetica Neue", Arial, sans-serif;
+    font-weight:600;
+    font-size:clamp(28px, 6.4vw, 88px);
+    line-height:1.15;
+    letter-spacing:-0.01em;
+    margin:0 .16em;
+
+    background-image:linear-gradient(180deg, #ffffff 0%, #ffffff 45%, rgba(255,255,255,.5) 100%);
+    background-clip:text;
+    -webkit-background-clip:text;
+    color:transparent;
+    -webkit-text-fill-color:transparent;
+
+    opacity:0;
+    display:inline-block;
+    transform:translateY(.4em) scale(.94);
+    filter:blur(8px);
+    animation:reveal .7s cubic-bezier(.16,.9,.28,1) forwards;
+    animation-play-state:paused;
+  }
+
+  @keyframes reveal{
+    to{
+      opacity:1;
+      transform:translateY(0) scale(1);
+      filter:blur(0);
+    }
+  }
+
+  .stage.fade-out .word{
+    transition:opacity .55s ease, filter .55s ease, transform .55s ease;
+    opacity:0 !important;
+    filter:blur(10px);
+    transform:translateY(-.25em) scale(1.02);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .word{ animation:none; opacity:1; filter:none; transform:none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="stage" id="stage">
+    <div class="line">
+      <span class="word">Your</span><span class="word">feed.</span>
+    </div>
+    <div class="line">
+      <span class="word">Your</span><span class="word">markets.</span>
+    </div>
+    <div class="line">
+      <span class="word">Nothing</span><span class="word">else.</span>
+    </div>
+  </div>
+
+<script>
+  const stage = document.getElementById('stage');
+  const words = Array.from(stage.querySelectorAll('.word'));
+
+  const STEP = 160;        // ms between each word starting
+  const CLAUSE_PAUSE = 220; // extra pause after a word ending a clause (".")
+  const HOLD = 1500;        // ms to hold once fully revealed
+  const FADE = 600;         // ms fade-out duration (matches CSS transition)
+  const GAP = 500;          // ms blank pause before the loop restarts
+
+  let t = 0;
+  const delays = words.map(w => {
+    const d = t;
+    t += STEP + (w.textContent.trim().endsWith('.') ? CLAUSE_PAUSE : 0);
+    return d;
+  });
+
+  function play(){
+    words.forEach((w, i) => {
+      w.style.animationDelay = delays[i] + 'ms';
+      w.style.animationPlayState = 'running';
+    });
+    const totalReveal = delays[delays.length - 1] + 700; // last word's animation duration
+    setTimeout(() => {
+      stage.classList.add('fade-out');
+      setTimeout(reset, FADE + GAP);
+    }, totalReveal + HOLD);
+  }
+
+  function reset(){
+    stage.classList.remove('fade-out');
+    words.forEach(w => {
+      w.style.animationPlayState = 'paused';
+      w.style.animation = 'none';
+      void w.offsetWidth; // restart the animation cleanly
+      w.style.animation = '';
+      w.style.opacity = 0;
+    });
+    requestAnimationFrame(() => requestAnimationFrame(play));
+  }
+
+  play();
+</script>
+
+</body>
+</html>
