@@ -492,7 +492,8 @@
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
-    const DAMPING = 0.03; // per ms — one continuous glide toward the target, settles in ~200-250ms
+    const DAMPING = 0.006; // per ms — slow, gradual glide toward the target (~700-900ms settle)
+    const INPUT_SCALE = 0.6; // softens how far a single scroll gesture travels
 
     let target = window.scrollY;
     let current = window.scrollY;
@@ -517,7 +518,7 @@
 
     function onWheel(e){
       if (e.ctrlKey) return; // let pinch-zoom through
-      target = Math.max(0, Math.min(target + e.deltaY, maxScroll()));
+      target = Math.max(0, Math.min(target + e.deltaY * INPUT_SCALE, maxScroll()));
       e.preventDefault();
       if (raf == null){ lastTime = null; raf = requestAnimationFrame(loop); }
     }
