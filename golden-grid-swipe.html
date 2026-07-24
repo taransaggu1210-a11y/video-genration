@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Golden Grid — Swipe Animation</title>
+<style>
+  :root{
+    --black:      #050504;
+    --gold:       #cdb968;
+    --gold-soft:  #e8c76a;
+    --grid-size:  56px;
+    --cycle:      30s;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:var(--black);
+    overflow:hidden;
+  }
+
+  .stage{
+    position:relative;
+    width:100vw; height:100vh;
+    background:var(--black);
+    isolation:isolate;
+  }
+
+  /* ---------- base vignette: keeps the black grounded, fades grid at the edges ---------- */
+  .vignette{
+    position:absolute; inset:0; z-index:3;
+    background:radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(5,5,4,.55) 78%, rgba(5,5,4,.95) 100%);
+    pointer-events:none;
+  }
+
+  /* ---------- grid layer ---------- */
+  .grid-layer{
+    position:absolute;
+    top:50%; left:50%;
+    width:220vmax; height:220vmax;
+    transform:translate(-50%, -50%);
+    background-image:
+      repeating-linear-gradient(0deg,  rgba(205,185,104,.16) 0, rgba(205,185,104,.16) 1px, transparent 1px, transparent var(--grid-size)),
+      repeating-linear-gradient(90deg, rgba(205,185,104,.16) 0, rgba(205,185,104,.16) 1px, transparent 1px, transparent var(--grid-size));
+    background-position: 0 0, 0 0;
+    animation: gridDrift var(--cycle) linear infinite;
+    z-index:1;
+  }
+
+  @keyframes gridDrift{
+    0%   { background-position: 0 0, 0 0; }
+    100% { background-position: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size); }
+  }
+
+  /* faint secondary grid, larger cells, drifting the opposite way for depth */
+  .grid-layer.fine{
+    background-image:
+      repeating-linear-gradient(0deg,  rgba(232,199,106,.05) 0, rgba(232,199,106,.05) 1px, transparent 1px, transparent calc(var(--grid-size)*4)),
+      repeating-linear-gradient(90deg, rgba(232,199,106,.05) 0, rgba(232,199,106,.05) 1px, transparent 1px, transparent calc(var(--grid-size)*4));
+    animation: gridDriftFine var(--cycle) linear infinite;
+    z-index:0;
+  }
+
+  @keyframes gridDriftFine{
+    0%   { background-position: 0 0, 0 0; }
+    100% { background-position: calc(var(--grid-size)*-4) calc(var(--grid-size)*-4), calc(var(--grid-size)*-4) calc(var(--grid-size)*-4); }
+  }
+
+  /* ---------- swipe: one slow diagonal band of gold light per cycle ---------- */
+  .swipe{
+    position:absolute; inset:-20% -60%;
+    z-index:2;
+    background:linear-gradient(
+      75deg,
+      transparent 38%,
+      rgba(232,199,106,0) 44%,
+      rgba(232,199,106,.28) 48%,
+      rgba(255,240,195,.62) 50%,
+      rgba(232,199,106,.28) 52%,
+      rgba(232,199,106,0) 56%,
+      transparent 62%
+    );
+    transform:translateX(-38%);
+    animation: swipeMove var(--cycle) cubic-bezier(.45,.05,.55,.95) infinite;
+    mix-blend-mode:screen;
+    filter:blur(2px);
+  }
+
+  @keyframes swipeMove{
+    0%   { transform:translateX(-38%); opacity:0; }
+    8%   { opacity:1; }
+    50%  { transform:translateX(38%); opacity:1; }
+    92%  { opacity:1; }
+    100% { transform:translateX(-38%); opacity:0; }
+  }
+
+  /* subtle overall pulse so the grid itself breathes with the swipe, not static */
+  .grid-layer{ animation-name: gridDrift, gridPulse; animation-duration: var(--cycle), var(--cycle); animation-timing-function: linear, ease-in-out; animation-iteration-count: infinite, infinite; }
+
+  @keyframes gridPulse{
+    0%, 100% { opacity:.85; }
+    50%      { opacity:1; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .grid-layer, .grid-layer.fine, .swipe{ animation:none; }
+    .swipe{ opacity:.35; transform:translateX(0); }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="grid-layer fine"></div>
+    <div class="grid-layer"></div>
+    <div class="swipe"></div>
+    <div class="vignette"></div>
+  </div>
+</body>
+</html>
