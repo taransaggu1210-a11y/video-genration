@@ -491,37 +491,38 @@
   (function smoothScroll(){
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const DURATION = 260; // ms — quick eased hop, then a full stop (matches native wheel-tick feel)
     const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
-    const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+    const DAMPING = 0.03; // per ms — one continuous glide toward the target, settles in ~200-250ms
 
     let target = window.scrollY;
-    let startY = target;
-    let startTime = 0;
-    let animating = false;
+    let current = window.scrollY;
+    let raf = null;
+    let lastTime = null;
 
-    function currentY(now){
-      const t = Math.min(1, (now - startTime) / DURATION);
-      return startY + (target - startY) * easeOutCubic(t);
-    }
-
-    function step(now){
-      window.scrollTo(0, currentY(now));
-      if (now - startTime >= DURATION){ animating = false; return; }
-      requestAnimationFrame(step);
+    function loop(now){
+      const dt = lastTime == null ? 16.67 : Math.min(now - lastTime, 48);
+      lastTime = now;
+      const factor = 1 - Math.exp(-DAMPING * dt);
+      current += (target - current) * factor;
+      if (Math.abs(target - current) < 0.4){
+        current = target;
+        window.scrollTo(0, current);
+        raf = null;
+        lastTime = null;
+        return;
+      }
+      window.scrollTo(0, current);
+      raf = requestAnimationFrame(loop);
     }
 
     function onWheel(e){
       if (e.ctrlKey) return; // let pinch-zoom through
-      const now = performance.now();
-      startY = animating ? currentY(now) : window.scrollY;
-      startTime = now;
       target = Math.max(0, Math.min(target + e.deltaY, maxScroll()));
       e.preventDefault();
-      if (!animating){ animating = true; requestAnimationFrame(step); }
+      if (raf == null){ lastTime = null; raf = requestAnimationFrame(loop); }
     }
 
-    function resync(){ target = window.scrollY; startY = target; }
+    function resync(){ target = window.scrollY; current = target; }
 
     window.addEventListener('wheel', onWheel, { passive:false });
     window.addEventListener('resize', resync);
