@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Golden Grid — Swipe Animation</title>
+<title>Golden Grid</title>
 <style>
   :root{
     --black:      #050504;
     --grid-size:  38px;
     --cycle:      30s;
-    --ease:       cubic-bezier(.62,.04,.38,.96);
   }
 
   *{ box-sizing:border-box; }
@@ -31,8 +30,8 @@
   /* ---------- ambient secondary grid: large cells, faint, slow opposite drift ---------- */
   .grid-fine{
     background-image:
-      repeating-linear-gradient(0deg,  rgba(160,160,158,.08) 0, rgba(160,160,158,.08) 1px, transparent 1px, transparent calc(var(--grid-size)*4)),
-      repeating-linear-gradient(90deg, rgba(160,160,158,.08) 0, rgba(160,160,158,.08) 1px, transparent 1px, transparent calc(var(--grid-size)*4));
+      repeating-linear-gradient(0deg,  rgba(232,199,106,.06) 0, rgba(232,199,106,.06) 1px, transparent 1px, transparent calc(var(--grid-size)*4)),
+      repeating-linear-gradient(90deg, rgba(232,199,106,.06) 0, rgba(232,199,106,.06) 1px, transparent 1px, transparent calc(var(--grid-size)*4));
     animation: gridDriftFine var(--cycle) linear infinite;
     z-index:0;
   }
@@ -42,11 +41,11 @@
     100% { background-position: calc(var(--grid-size)*-4) calc(var(--grid-size)*-4), calc(var(--grid-size)*-4) calc(var(--grid-size)*-4); }
   }
 
-  /* ---------- base grid: grey lines, visible throughout ---------- */
+  /* ---------- base grid: golden lines, visible throughout ---------- */
   .grid-base{
     background-image:
-      repeating-linear-gradient(0deg,  rgba(165,165,163,.34) 0, rgba(165,165,163,.34) 1px, transparent 1px, transparent var(--grid-size)),
-      repeating-linear-gradient(90deg, rgba(165,165,163,.34) 0, rgba(165,165,163,.34) 1px, transparent 1px, transparent var(--grid-size));
+      repeating-linear-gradient(0deg,  rgba(215,178,96,.32) 0, rgba(215,178,96,.32) 1px, transparent 1px, transparent var(--grid-size)),
+      repeating-linear-gradient(90deg, rgba(215,178,96,.32) 0, rgba(215,178,96,.32) 1px, transparent 1px, transparent var(--grid-size));
     animation: gridDrift var(--cycle) linear infinite, gridPulse var(--cycle) ease-in-out infinite;
     z-index:1;
   }
@@ -61,52 +60,6 @@
     50%      { opacity:1; }
   }
 
-  /* ---------- swipe: exact copies of the same grid, clipped to a moving diagonal
-     band so only the line segments inside it light up — layered halo + hot core
-     for a soft cinematic falloff, eased as a single glide rather than constant speed ---------- */
-  .grid-glow{
-    background-image:
-      repeating-linear-gradient(0deg,  var(--glow-c) 0, var(--glow-c) 1px, transparent 1px, transparent var(--grid-size)),
-      repeating-linear-gradient(90deg, var(--glow-c) 0, var(--glow-c) 1px, transparent 1px, transparent var(--grid-size));
-    mix-blend-mode:screen;
-    z-index:2;
-    animation:
-      gridDrift var(--cycle) linear infinite,
-      swipeFade var(--cycle) ease-in-out infinite,
-      swipeClip var(--cycle) var(--ease) infinite;
-  }
-
-  .grid-glow.halo{
-    --glow-c: rgba(255,199,104,.60);
-    filter: blur(5px) drop-shadow(0 0 14px rgba(255,190,100,.45));
-    animation-name: gridDrift, swipeFade, swipeClipHalo;
-  }
-
-  .grid-glow.core{
-    --glow-c: rgba(255,248,222,1);
-    filter: drop-shadow(0 0 2px rgba(255,240,200,.85)) drop-shadow(0 0 5px rgba(255,210,130,.6));
-    animation-name: gridDrift, swipeFade, swipeClipCore;
-  }
-
-  /* wide, soft-edged halo band */
-  @keyframes swipeClipHalo{
-    0%   { clip-path: polygon(-21% 0%, 1% 0%, -7% 100%, -29% 100%); }
-    100% { clip-path: polygon(107% 0%, 129% 0%, 121% 100%, 99% 100%); }
-  }
-
-  /* narrow, hot core band */
-  @keyframes swipeClipCore{
-    0%   { clip-path: polygon(-15% 0%, -11% 0%, -13% 100%, -17% 100%); }
-    100% { clip-path: polygon(113% 0%, 117% 0%, 115% 100%, 111% 100%); }
-  }
-
-  @keyframes swipeFade{
-    0%   { opacity:0; }
-    8%   { opacity:1; }
-    92%  { opacity:1; }
-    100% { opacity:0; }
-  }
-
   /* ---------- vignette: keeps the black grounded, fades grid at the edges ---------- */
   .vignette{
     z-index:3;
@@ -115,8 +68,7 @@
   }
 
   @media (prefers-reduced-motion: reduce){
-    .grid-fine, .grid-base, .grid-glow{ animation:none; }
-    .grid-glow{ opacity:0; }
+    .grid-fine, .grid-base{ animation:none; }
   }
 </style>
 </head>
@@ -124,8 +76,6 @@
   <div class="stage">
     <div class="layer grid-fine"></div>
     <div class="layer grid-base"></div>
-    <div class="layer grid-glow halo"></div>
-    <div class="layer grid-glow core"></div>
     <div class="layer vignette"></div>
   </div>
 </body>
