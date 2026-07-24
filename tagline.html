@@ -45,9 +45,8 @@
 
     opacity:0;
     display:inline-block;
-    transform:translateY(.4em) scale(.94);
-    filter:blur(8px);
-    animation:reveal .7s cubic-bezier(.16,.9,.28,1) forwards;
+    transform:translateY(.4em) scale(.96);
+    animation:reveal .5s cubic-bezier(.16,.9,.28,1) forwards;
     animation-play-state:paused;
   }
 
@@ -61,19 +60,17 @@
     to{
       opacity:1;
       transform:translateY(0) scale(1);
-      filter:blur(0);
     }
   }
 
   .stage.fade-out .word{
-    transition:opacity .55s ease, filter .55s ease, transform .55s ease;
+    transition:opacity .4s ease, transform .4s ease;
     opacity:0 !important;
-    filter:blur(10px);
-    transform:translateY(-.25em) scale(1.02);
+    transform:translateY(-.2em) scale(1.01);
   }
 
   @media (prefers-reduced-motion: reduce){
-    .word{ animation:none; opacity:1; filter:none; transform:none; }
+    .word{ animation:none; opacity:1; transform:none; }
   }
 </style>
 </head>
@@ -93,7 +90,7 @@
   const STEP = 160;        // ms between each word starting
   const CLAUSE_PAUSE = 220; // extra pause after a word ending a clause (".")
   const HOLD = 1500;        // ms to hold once fully revealed
-  const FADE = 600;         // ms fade-out duration (matches CSS transition)
+  const FADE = 450;         // ms fade-out duration (matches CSS transition)
   const GAP = 500;          // ms blank pause before a loop restart (only with ?loop)
 
   let t = 0;
@@ -102,7 +99,7 @@
     t += STEP + (w.textContent.trim().endsWith('.') ? CLAUSE_PAUSE : 0);
     return d;
   });
-  const totalReveal = delays[delays.length - 1] + 700; // last word's animation duration
+  const totalReveal = delays[delays.length - 1] + 500; // last word's animation duration
   window.ANIM_TOTAL_MS = totalReveal + HOLD + FADE; // full in->hold->out duration, for capture tooling
 
   function play(){
