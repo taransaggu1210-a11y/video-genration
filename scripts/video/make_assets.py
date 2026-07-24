@@ -2,9 +2,9 @@ from PIL import Image, ImageDraw
 
 SS = 4  # supersample factor for anti-aliasing
 
-INNER_W, INNER_H = 1152, 648
-BORDER = 4
-OUTER_R = 18
+INNER_W, INNER_H = 1408, 792
+BORDER = 2
+OUTER_R = 16
 INNER_R = 15
 CARD_W, CARD_H = INNER_W + 2 * BORDER, INNER_H + 2 * BORDER
 
