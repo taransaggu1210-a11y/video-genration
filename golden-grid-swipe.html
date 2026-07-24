@@ -6,9 +6,10 @@
 <title>Golden Gradient Grid</title>
 <style>
   :root{
-    --black:      #050504;
+    --black:      #050403;
     --grid-size:  38px;
     --cycle:      30s;
+    --silk:       cubic-bezier(.45,0,.15,1);
   }
 
   *{ box-sizing:border-box; }
@@ -23,75 +24,101 @@
     width:100vw; height:100vh;
     background:var(--black);
     isolation:isolate;
+    overflow:hidden;
   }
 
   .layer{ position:absolute; inset:0; }
 
-  /* ---------- ambient secondary grid: large cells, faint, drifting the opposite way ---------- */
-  .grid-fine{
-    background: linear-gradient(115deg, #4a2f0c 0%, #cdb968 24%, #fff2cf 48%, #e0a53e 66%, #4a2f0c 100%);
-    background-size: 260% 260%;
-    -webkit-mask-image:
-      repeating-linear-gradient(0deg,  black 0, black 1px, transparent 1px, transparent calc(var(--grid-size)*4)),
-      repeating-linear-gradient(90deg, black 0, black 1px, transparent 1px, transparent calc(var(--grid-size)*4));
-    mask-image:
-      repeating-linear-gradient(0deg,  black 0, black 1px, transparent 1px, transparent calc(var(--grid-size)*4)),
-      repeating-linear-gradient(90deg, black 0, black 1px, transparent 1px, transparent calc(var(--grid-size)*4));
-    opacity:.28;
-    animation: maskDriftFine var(--cycle) linear infinite, gradientShift calc(var(--cycle)*1.4) ease-in-out infinite;
+  /* everything that should breathe together, scaled as one unit so no edge gaps appear */
+  .breathe{
+    position:absolute; inset:0;
+    transform-origin:center;
+    animation: breathe calc(var(--cycle)*1.2) var(--silk) infinite;
+  }
+
+  @keyframes breathe{
+    0%, 100% { transform:scale(1); }
+    50%      { transform:scale(1.018); }
+  }
+
+  /* soft warm haze behind the grid, so the black base isn't flat void */
+  .ambient-glow{
+    background: radial-gradient(ellipse 60% 55% at 50% 46%, rgba(255,178,84,.10) 0%, rgba(130,84,24,.04) 42%, transparent 72%);
     z-index:0;
   }
 
-  @keyframes maskDriftFine{
-    0%   { -webkit-mask-position: 0 0, 0 0;       mask-position: 0 0, 0 0; }
-    100% { -webkit-mask-position: calc(var(--grid-size)*-4) calc(var(--grid-size)*-4), calc(var(--grid-size)*-4) calc(var(--grid-size)*-4);
-           mask-position: calc(var(--grid-size)*-4) calc(var(--grid-size)*-4), calc(var(--grid-size)*-4) calc(var(--grid-size)*-4); }
-  }
-
-  /* ---------- base grid: lines filled with a moving golden gradient ---------- */
-  .grid-base{
-    background: linear-gradient(115deg, #5c3a10 0%, #cdb968 22%, #fff3d2 45%, #f0b94a 62%, #7a4a12 82%, #cdb968 100%);
-    background-size: 300% 300%;
-    -webkit-mask-image:
-      repeating-linear-gradient(0deg,  black 0, black 1px, transparent 1px, transparent var(--grid-size)),
-      repeating-linear-gradient(90deg, black 0, black 1px, transparent 1px, transparent var(--grid-size));
-    mask-image:
-      repeating-linear-gradient(0deg,  black 0, black 1px, transparent 1px, transparent var(--grid-size)),
-      repeating-linear-gradient(90deg, black 0, black 1px, transparent 1px, transparent var(--grid-size));
-    filter: drop-shadow(0 0 1.4px rgba(255,224,150,.55));
-    animation: maskDrift var(--cycle) linear infinite, gradientShift var(--cycle) ease-in-out infinite;
+  /* ---------- ambient secondary grid: large cells, faint, drifting the opposite way ---------- */
+  .grid-fine{
+    background-image:
+      repeating-linear-gradient(0deg,  rgba(224,175,90,.10) 0, rgba(224,175,90,.10) 1px, transparent 1px, transparent calc(var(--grid-size)*4)),
+      repeating-linear-gradient(90deg, rgba(224,175,90,.10) 0, rgba(224,175,90,.10) 1px, transparent 1px, transparent calc(var(--grid-size)*4));
+    animation: gridDriftFine var(--cycle) linear infinite;
     z-index:1;
   }
 
-  @keyframes maskDrift{
-    0%   { -webkit-mask-position: 0 0, 0 0;                                   mask-position: 0 0, 0 0; }
-    100% { -webkit-mask-position: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size);
-           mask-position: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size); }
+  @keyframes gridDriftFine{
+    0%   { background-position: 0 0, 0 0; }
+    100% { background-position: calc(var(--grid-size)*-4) calc(var(--grid-size)*-4), calc(var(--grid-size)*-4) calc(var(--grid-size)*-4); }
   }
 
-  /* the gold flows across the grid: amber -> bright gold -> pale cream -> amber, back and forth */
-  @keyframes gradientShift{
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  /* ---------- base grid: three flat-color copies cross-fading in and out, which reads
+     as one continuous gold gradient flowing through bronze -> gold -> champagne ---------- */
+  .grid-tone{
+    background-image:
+      repeating-linear-gradient(0deg,  var(--tone) 0, var(--tone) 1px, transparent 1px, transparent var(--grid-size)),
+      repeating-linear-gradient(90deg, var(--tone) 0, var(--tone) 1px, transparent 1px, transparent var(--grid-size));
+    filter:
+      drop-shadow(0 0 1px  rgba(255,236,190,.85))
+      drop-shadow(0 0 4px  rgba(255,205,120,.45))
+      drop-shadow(0 0 10px rgba(230,160,70,.25));
+    z-index:2;
+  }
+
+  .grid-tone.bronze{ --tone: rgba(190,130,46,.92); animation: gridDrift var(--cycle) linear infinite, toneBronze var(--cycle) var(--silk) infinite; }
+  .grid-tone.gold  { --tone: rgba(255,205,110,.95); animation: gridDrift var(--cycle) linear infinite, toneGold   var(--cycle) var(--silk) infinite; }
+  .grid-tone.cream { --tone: rgba(255,236,195,.95); animation: gridDrift var(--cycle) linear infinite, toneCream  var(--cycle) var(--silk) infinite; }
+
+  @keyframes gridDrift{
+    0%   { background-position: 0 0, 0 0; }
+    100% { background-position: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size); }
+  }
+
+  @keyframes toneBronze{ 0%,100% { opacity:1;    } 33% { opacity:.08; } 67% { opacity:.08; } }
+  @keyframes toneGold  { 0%,100% { opacity:.08; } 33% { opacity:1;    } 67% { opacity:.08; } }
+  @keyframes toneCream { 0%,100% { opacity:.08; } 33% { opacity:.08; } 67% { opacity:1;    } }
+
+  /* fine film grain to break up the flat CSS fills and add production texture */
+  .grain{
+    z-index:3;
+    opacity:.05;
+    mix-blend-mode:overlay;
+    pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    background-size:180px 180px;
   }
 
   /* ---------- vignette: keeps the black grounded, fades grid at the edges ---------- */
   .vignette{
-    z-index:3;
-    background:radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(5,5,4,.55) 78%, rgba(5,5,4,.95) 100%);
+    z-index:4;
+    background:radial-gradient(ellipse at center, rgba(0,0,0,0) 32%, rgba(4,3,2,.62) 76%, rgba(4,3,2,.97) 100%);
     pointer-events:none;
   }
 
   @media (prefers-reduced-motion: reduce){
-    .grid-fine, .grid-base{ animation:none; }
+    .breathe, .grid-fine, .grid-tone{ animation:none; }
   }
 </style>
 </head>
 <body>
   <div class="stage">
-    <div class="layer grid-fine"></div>
-    <div class="layer grid-base"></div>
+    <div class="breathe">
+      <div class="layer ambient-glow"></div>
+      <div class="layer grid-fine"></div>
+      <div class="layer grid-tone bronze"></div>
+      <div class="layer grid-tone gold"></div>
+      <div class="layer grid-tone cream"></div>
+    </div>
+    <div class="layer grain"></div>
     <div class="layer vignette"></div>
   </div>
 </body>
