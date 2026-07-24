@@ -68,7 +68,7 @@ ffmpeg -y \
 [0:v][card]overlay=x=${X}:y='${Y_EXPR}':eof_action=pass[vout]
 " \
   -map "[vout]" -map 0:a \
-  -c:v libx264 -pix_fmt yuv420p -crf 18 -preset medium \
-  -c:a aac -b:a 192k \
+  -c:v libx264 -pix_fmt yuv420p -crf 14 -preset slow \
+  -c:a aac -b:a 256k \
   -t "$BASE_DUR" \
   "$OUT"
