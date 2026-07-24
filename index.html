@@ -228,6 +228,7 @@
     display:grid; grid-template-columns:repeat(4, 1fr); gap:14px;
   }
   .card{
+    position:relative; overflow:hidden;
     border:1px solid var(--line); border-radius:6px;
     background:var(--bg-raised);
     padding:16px; display:flex; flex-direction:column; gap:12px;
@@ -236,6 +237,20 @@
   }
   .card:hover{ border-color:var(--ink-faint); }
   .card.hot{ border-top-color:var(--emerald); }
+  .card::before{
+    content:""; position:absolute; top:0; left:-60%; width:40%; height:100%;
+    background:linear-gradient(100deg, transparent, rgba(205,185,104,.35), transparent);
+    transform:skewX(-20deg);
+    animation:card-swipe 1.1s ease-out var(--swipe-delay, 0s) both;
+    pointer-events:none;
+  }
+  @keyframes card-swipe{
+    from{ left:-60%; }
+    to{ left:130%; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .card::before{ animation:none; display:none; }
+  }
   .card-top{ display:flex; align-items:center; justify-content:space-between; font-size:11px; }
   .card-cat{ display:flex; align-items:center; gap:6px; font-weight:700; letter-spacing:.05em; }
   .card-cat .dot{ width:6px; height:6px; border-radius:50%; }
@@ -412,14 +427,32 @@
     { cat:'soccer',     vol:'2M',   title:'Will Charlotte FC win the 2026 MLS Cup?', spr:'98¢', yes:2, no:99 },
     { cat:'basketball', vol:'1.8M', title:'Will Tarris Reed Jr. win the 2026-27 NBA Rookie of the Year?', spr:'100¢', yes:0, no:100 },
     { cat:'basketball', vol:'1.8M', title:'Will LeBron James play for the San Antonio Spurs in 2026-27?', spr:'98¢', yes:100, no:1 },
+    { cat:'soccer',     vol:'1.7M', title:'Will Inter Miami CF win the 2026 MLS Cup?', spr:'92¢', yes:71, no:30 },
+    { cat:'basketball', vol:'1.7M', title:'Will Nikola Jokić win 2026-27 NBA MVP?', spr:'55¢', yes:44, no:57 },
+    { cat:'soccer',     vol:'1.6M', title:'Will LA Galaxy win the 2026 MLS Cup?', spr:'94¢', yes:6, no:95 },
+    { cat:'basketball', vol:'1.6M', title:'Will the Boston Celtics win the 2026-27 NBA Finals?', spr:'71¢', yes:31, no:70 },
+    { cat:'soccer',     vol:'1.5M', title:'Will Seattle Sounders FC win the 2026 MLS Cup?', spr:'96¢', yes:3, no:98 },
+    { cat:'basketball', vol:'1.5M', title:'Will Victor Wembanyama win 2026-27 Defensive Player of the Year?', spr:'40¢', yes:60, no:41 },
+    { cat:'soccer',     vol:'1.4M', title:'Will FC Cincinnati win the 2026 MLS Cup?', spr:'97¢', yes:2, no:99 },
+    { cat:'basketball', vol:'1.4M', title:'Will the Oklahoma City Thunder win the 2026-27 NBA Finals?', spr:'62¢', yes:39, no:62 },
+    { cat:'soccer',     vol:'1.3M', title:'Will Atlanta United FC win the 2026 MLS Cup?', spr:'95¢', yes:5, no:96 },
+    { cat:'basketball', vol:'1.3M', title:'Will Cooper Flagg win the 2026-27 NBA Rookie of the Year?', spr:'22¢', yes:78, no:23 },
+    { cat:'soccer',     vol:'1.2M', title:'Will New York City FC win the 2026 MLS Cup?', spr:'97¢', yes:2, no:98 },
+    { cat:'basketball', vol:'1.2M', title:'Will the Denver Nuggets win the 2026-27 NBA Finals?', spr:'80¢', yes:19, no:81 },
+    { cat:'soccer',     vol:'1.1M', title:'Will Philadelphia Union win the 2026 MLS Cup?', spr:'93¢', yes:8, no:92 },
+    { cat:'basketball', vol:'1.1M', title:'Will Giannis Antetokounmpo win 2026-27 NBA MVP?', spr:'66¢', yes:33, no:66 },
+    { cat:'soccer',     vol:'1M',   title:'Will Vancouver Whitecaps FC win the 2026 MLS Cup?', spr:'96¢', yes:4, no:97 },
+    { cat:'basketball', vol:'980K', title:'Will Anthony Edwards win the 2026-27 NBA scoring title?', spr:'58¢', yes:41, no:58 },
+    { cat:'soccer',     vol:'940K', title:'Will Sporting Kansas City win the 2026 MLS Cup?', spr:'97¢', yes:3, no:98 },
+    { cat:'basketball', vol:'910K', title:'Will the Minnesota Timberwolves win the 2026-27 NBA Finals?', spr:'88¢', yes:12, no:89 },
   ];
 
   const catDot = { basketball:'BASKETBALL', soccer:'SOCCER' };
 
   function renderCards(){
     const grid = document.getElementById('card-grid');
-    grid.innerHTML = CARDS.map(c => `
-      <div class="card${c.hot ? ' hot' : ''}">
+    grid.innerHTML = CARDS.map((c, i) => `
+      <div class="card${c.hot ? ' hot' : ''}" style="--swipe-delay:${(i % 6) * 0.06}s">
         <div class="card-top">
           <div class="card-cat ${c.cat}"><span class="dot"></span>${catDot[c.cat]}</div>
           <div class="card-vol">${c.vol} <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
