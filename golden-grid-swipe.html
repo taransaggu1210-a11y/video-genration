@@ -30,8 +30,8 @@
   /* ---------- ambient secondary grid: large cells, faint, slow opposite drift ---------- */
   .grid-fine{
     background-image:
-      repeating-linear-gradient(0deg,  rgba(232,199,106,.05) 0, rgba(232,199,106,.05) 1px, transparent 1px, transparent calc(var(--grid-size)*4)),
-      repeating-linear-gradient(90deg, rgba(232,199,106,.05) 0, rgba(232,199,106,.05) 1px, transparent 1px, transparent calc(var(--grid-size)*4));
+      repeating-linear-gradient(0deg,  rgba(160,160,158,.08) 0, rgba(160,160,158,.08) 1px, transparent 1px, transparent calc(var(--grid-size)*4)),
+      repeating-linear-gradient(90deg, rgba(160,160,158,.08) 0, rgba(160,160,158,.08) 1px, transparent 1px, transparent calc(var(--grid-size)*4));
     animation: gridDriftFine var(--cycle) linear infinite;
     z-index:0;
   }
@@ -41,11 +41,11 @@
     100% { background-position: calc(var(--grid-size)*-4) calc(var(--grid-size)*-4), calc(var(--grid-size)*-4) calc(var(--grid-size)*-4); }
   }
 
-  /* ---------- base grid: the lines that are always faintly visible ---------- */
+  /* ---------- base grid: grey lines, visible throughout ---------- */
   .grid-base{
     background-image:
-      repeating-linear-gradient(0deg,  rgba(205,185,104,.16) 0, rgba(205,185,104,.16) 1px, transparent 1px, transparent var(--grid-size)),
-      repeating-linear-gradient(90deg, rgba(205,185,104,.16) 0, rgba(205,185,104,.16) 1px, transparent 1px, transparent var(--grid-size));
+      repeating-linear-gradient(0deg,  rgba(165,165,163,.34) 0, rgba(165,165,163,.34) 1px, transparent 1px, transparent var(--grid-size)),
+      repeating-linear-gradient(90deg, rgba(165,165,163,.34) 0, rgba(165,165,163,.34) 1px, transparent 1px, transparent var(--grid-size));
     animation: gridDrift var(--cycle) linear infinite, gridPulse var(--cycle) ease-in-out infinite;
     z-index:1;
   }
