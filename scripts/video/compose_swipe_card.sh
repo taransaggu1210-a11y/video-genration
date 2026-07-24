@@ -13,9 +13,10 @@ OVERLAY=""
 OUT=""
 START=2.0        # seconds into the base video when the card starts swiping up
 SWIPE_DUR=0.6    # seconds the swipe-up / swipe-down transitions take
+SWIPE_DOWN_AT="" # output-timeline second the swipe-down begins; default = START + overlay duration
 
 usage() {
-  echo "Usage: $0 --base BASE.mp4 --overlay OVERLAY.mp4 --out OUT.mp4 [--start 2.0] [--swipe-dur 0.6]"
+  echo "Usage: $0 --base BASE.mp4 --overlay OVERLAY.mp4 --out OUT.mp4 [--start 2.0] [--swipe-dur 0.6] [--swipe-down-at SECONDS]"
   exit 1
 }
 
@@ -26,6 +27,7 @@ while [[ $# -gt 0 ]]; do
     --out) OUT="$2"; shift 2 ;;
     --start) START="$2"; shift 2 ;;
     --swipe-dur) SWIPE_DUR="$2"; shift 2 ;;
+    --swipe-down-at) SWIPE_DOWN_AT="$2"; shift 2 ;;
     *) usage ;;
   esac
 done
@@ -47,7 +49,11 @@ Y_TARGET=$(( (BASE_H - CARD_H) / 2 ))
 Y_HIDDEN=$BASE_H
 
 T_IN_END=$(python3 -c "print(${START}+${SWIPE_DUR})")
-T_OUT_START=$(python3 -c "print(${START}+${OVERLAY_DUR})")
+if [[ -n "$SWIPE_DOWN_AT" ]]; then
+  T_OUT_START="$SWIPE_DOWN_AT"
+else
+  T_OUT_START=$(python3 -c "print(${START}+${OVERLAY_DUR})")
+fi
 T_OUT_END=$(python3 -c "print(${T_OUT_START}+${SWIPE_DUR})")
 
 Y_EXPR="if(lt(t,${START}),${Y_HIDDEN}, if(lt(t,${T_IN_END}), ${Y_HIDDEN}-(${Y_HIDDEN}-${Y_TARGET})*(1-pow(1-(t-${START})/${SWIPE_DUR},3)), if(lt(t,${T_OUT_START}),${Y_TARGET}, if(lt(t,${T_OUT_END}), ${Y_TARGET}+(${Y_HIDDEN}-${Y_TARGET})*pow((t-${T_OUT_START})/${SWIPE_DUR},3), ${Y_HIDDEN}))))"
