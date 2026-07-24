@@ -7,8 +7,9 @@
 <style>
   :root{
     --black:      #050504;
-    --grid-size:  56px;
+    --grid-size:  38px;
     --cycle:      30s;
+    --ease:       cubic-bezier(.62,.04,.38,.96);
   }
 
   *{ box-sizing:border-box; }
@@ -60,26 +61,43 @@
     50%      { opacity:1; }
   }
 
-  /* ---------- swipe glow: an exact bright copy of the base grid, clipped to a
-     moving diagonal band so only the line segments inside the band light up ---------- */
+  /* ---------- swipe: exact copies of the same grid, clipped to a moving diagonal
+     band so only the line segments inside it light up — layered halo + hot core
+     for a soft cinematic falloff, eased as a single glide rather than constant speed ---------- */
   .grid-glow{
     background-image:
-      repeating-linear-gradient(0deg,  rgba(255,229,153,.95) 0, rgba(255,229,153,.95) 1px, transparent 1px, transparent var(--grid-size)),
-      repeating-linear-gradient(90deg, rgba(255,229,153,.95) 0, rgba(255,229,153,.95) 1px, transparent 1px, transparent var(--grid-size));
-    animation: gridDrift var(--cycle) linear infinite, swipeClip var(--cycle) linear infinite, swipeFade var(--cycle) ease-in-out infinite;
-    filter: drop-shadow(0 0 2px rgba(255,222,150,.65)) drop-shadow(0 0 7px rgba(255,200,110,.35));
+      repeating-linear-gradient(0deg,  var(--glow-c) 0, var(--glow-c) 1px, transparent 1px, transparent var(--grid-size)),
+      repeating-linear-gradient(90deg, var(--glow-c) 0, var(--glow-c) 1px, transparent 1px, transparent var(--grid-size));
     mix-blend-mode:screen;
     z-index:2;
+    animation:
+      gridDrift var(--cycle) linear infinite,
+      swipeFade var(--cycle) ease-in-out infinite,
+      swipeClip var(--cycle) var(--ease) infinite;
   }
 
-  /* diagonal band sweeping from fully off-screen left to fully off-screen right;
-     values are clip-path polygon x/y percentages of the viewport-sized layer */
-  @keyframes swipeClip{
-    0%   { clip-path: polygon(-17% 0%, -5% 0%, -11% 100%, -23% 100%); }
-    8%   { clip-path: polygon(-6.8% 0%, 5.2% 0%, -0.8% 100%, -12.8% 100%); }
-    50%  { clip-path: polygon(47% 0%, 59% 0%, 53% 100%, 41% 100%); }
-    92%  { clip-path: polygon(100.8% 0%, 112.8% 0%, 106.8% 100%, 94.8% 100%); }
-    100% { clip-path: polygon(111% 0%, 123% 0%, 117% 100%, 105% 100%); }
+  .grid-glow.halo{
+    --glow-c: rgba(255,199,104,.60);
+    filter: blur(5px) drop-shadow(0 0 14px rgba(255,190,100,.45));
+    animation-name: gridDrift, swipeFade, swipeClipHalo;
+  }
+
+  .grid-glow.core{
+    --glow-c: rgba(255,248,222,1);
+    filter: drop-shadow(0 0 2px rgba(255,240,200,.85)) drop-shadow(0 0 5px rgba(255,210,130,.6));
+    animation-name: gridDrift, swipeFade, swipeClipCore;
+  }
+
+  /* wide, soft-edged halo band */
+  @keyframes swipeClipHalo{
+    0%   { clip-path: polygon(-21% 0%, 1% 0%, -7% 100%, -29% 100%); }
+    100% { clip-path: polygon(107% 0%, 129% 0%, 121% 100%, 99% 100%); }
+  }
+
+  /* narrow, hot core band */
+  @keyframes swipeClipCore{
+    0%   { clip-path: polygon(-15% 0%, -11% 0%, -13% 100%, -17% 100%); }
+    100% { clip-path: polygon(113% 0%, 117% 0%, 115% 100%, 111% 100%); }
   }
 
   @keyframes swipeFade{
@@ -106,7 +124,8 @@
   <div class="stage">
     <div class="layer grid-fine"></div>
     <div class="layer grid-base"></div>
-    <div class="layer grid-glow"></div>
+    <div class="layer grid-glow halo"></div>
+    <div class="layer grid-glow core"></div>
     <div class="layer vignette"></div>
   </div>
 </body>
