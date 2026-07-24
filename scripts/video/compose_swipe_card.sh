@@ -37,9 +37,9 @@ BASE_H=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of de
 BASE_DUR=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$BASE")
 OVERLAY_DUR=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$OVERLAY")
 
-INNER_W=960
+INNER_W=1152
 INNER_H=$(python3 -c "print(round(${INNER_W}*9/16))")
-BORDER=6
+BORDER=4
 CARD_W=$((INNER_W + 2 * BORDER))
 CARD_H=$((INNER_H + 2 * BORDER))
 X=$(( (BASE_W - CARD_W) / 2 ))
