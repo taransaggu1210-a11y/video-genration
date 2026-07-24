@@ -491,32 +491,37 @@
   (function smoothScroll(){
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    let target = window.scrollY;
-    let current = window.scrollY;
-    let ticking = false;
-    const ease = 0.14;
+    const DURATION = 260; // ms — quick eased hop, then a full stop (matches native wheel-tick feel)
     const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
+    const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
 
-    function onWheel(e){
-      if (e.ctrlKey) return; // let pinch-zoom through
-      e.preventDefault();
-      target = Math.max(0, Math.min(target + e.deltaY, maxScroll()));
-      if (!ticking){ ticking = true; requestAnimationFrame(step); }
+    let target = window.scrollY;
+    let startY = target;
+    let startTime = 0;
+    let animating = false;
+
+    function currentY(now){
+      const t = Math.min(1, (now - startTime) / DURATION);
+      return startY + (target - startY) * easeOutCubic(t);
     }
 
-    function step(){
-      current += (target - current) * ease;
-      if (Math.abs(target - current) < 0.4){
-        current = target;
-        window.scrollTo(0, current);
-        ticking = false;
-        return;
-      }
-      window.scrollTo(0, current);
+    function step(now){
+      window.scrollTo(0, currentY(now));
+      if (now - startTime >= DURATION){ animating = false; return; }
       requestAnimationFrame(step);
     }
 
-    function resync(){ target = window.scrollY; current = window.scrollY; }
+    function onWheel(e){
+      if (e.ctrlKey) return; // let pinch-zoom through
+      const now = performance.now();
+      startY = animating ? currentY(now) : window.scrollY;
+      startTime = now;
+      target = Math.max(0, Math.min(target + e.deltaY, maxScroll()));
+      e.preventDefault();
+      if (!animating){ animating = true; requestAnimationFrame(step); }
+    }
+
+    function resync(){ target = window.scrollY; startY = target; }
 
     window.addEventListener('wheel', onWheel, { passive:false });
     window.addEventListener('resize', resync);
