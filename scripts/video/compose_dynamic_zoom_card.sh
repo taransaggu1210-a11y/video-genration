@@ -55,14 +55,20 @@ OVERLAY_DUR=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk
 OVERLAY_W=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of default=nw=1:nk=1 "$OVERLAY")
 OVERLAY_H=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of default=nw=1:nk=1 "$OVERLAY")
 
-INNER_W=1408
+INNER_W=$(python3 -c "print(round(${BASE_W}*0.88/2)*2)")
 INNER_H=$(python3 -c "print(round(${INNER_W}*9/16))")
-BORDER=2
+BORDER=$(python3 -c "print(max(2, round(${BASE_W}*0.00125)))")
 CARD_W=$((INNER_W + 2 * BORDER))
 CARD_H=$((INNER_H + 2 * BORDER))
 X=$(( (BASE_W - CARD_W) / 2 ))
 Y_TARGET=$(( (BASE_H - CARD_H) / 2 ))
 Y_HIDDEN=$BASE_H
+
+# Regenerate the border/mask assets sized for this base resolution's card
+# (cheap, ~1s) so the card looks identical regardless of BASE_W.
+ASSET_DIR="$(mktemp -d)"
+trap 'rm -rf "$ASSET_DIR"' EXIT
+python3 "${SCRIPT_DIR}/make_assets.py" "$INNER_W" "$BORDER" "$ASSET_DIR" >/dev/null
 
 T_IN_END=$(python3 -c "print(${START}+${SWIPE_DUR})")
 if [[ -n "$SWIPE_DOWN_AT" ]]; then
@@ -103,8 +109,8 @@ CROP_Y_EXPR="${ZY_PADDED}*(${Z})*(${S})"
 ffmpeg -y \
   -i "$BASE" \
   -i "$OVERLAY" \
-  -loop 1 -i "${SCRIPT_DIR}/assets/gold_border.png" \
-  -loop 1 -i "${SCRIPT_DIR}/assets/inner_mask.png" \
+  -loop 1 -i "${ASSET_DIR}/gold_border.png" \
+  -loop 1 -i "${ASSET_DIR}/inner_mask.png" \
   -filter_complex "
 [1:v]pad=${PAD_W}:${PAD_H}:0:${PAD_OFF_Y}:color=black,scale=w='${SCALE_W_EXPR}':h='${SCALE_H_EXPR}':eval=frame,crop=w=${INNER_W}:h=${INNER_H}:x='${CROP_X_EXPR}':y='${CROP_Y_EXPR}',fps=30,format=yuva420p[tsc];
 [3:v]format=gray[mask];
@@ -112,8 +118,8 @@ ffmpeg -y \
 [trnd]tpad=stop_duration=${SWIPE_DUR}:stop_mode=clone[tpad];
 [tpad]setpts=PTS+${START}/TB[tdelay];
 [2:v]format=rgba[cardbg];
-[cardbg][tdelay]overlay=x=${BORDER}:y=${BORDER}:format=auto[card];
-[0:v][card]overlay=x=${X}:y='${Y_EXPR}':eof_action=pass[vout]
+[cardbg][tdelay]overlay=x=${BORDER}:y=${BORDER}:format=rgb[card];
+[0:v][card]overlay=x=${X}:y='${Y_EXPR}':eof_action=pass:format=rgb[vout]
 " \
   -map "[vout]" -map 0:a \
   -c:v libx264 -pix_fmt yuv420p -crf 14 -preset slow \
