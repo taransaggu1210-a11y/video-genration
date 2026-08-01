@@ -55,7 +55,7 @@ OVERLAY_DUR=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk
 OVERLAY_W=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of default=nw=1:nk=1 "$OVERLAY")
 OVERLAY_H=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of default=nw=1:nk=1 "$OVERLAY")
 
-INNER_W=$(python3 -c "print(round(${BASE_W}*0.88/2)*2)")
+INNER_W=$(python3 -c "print(round(${BASE_W}*0.94/2)*2)")
 INNER_H=$(python3 -c "print(round(${INNER_W}*9/16))")
 BORDER=$(python3 -c "print(max(2, round(${BASE_W}*0.00125)))")
 CARD_W=$((INNER_W + 2 * BORDER))

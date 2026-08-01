@@ -52,7 +52,7 @@ else
   OVERLAY_DUR=$(python3 -c "print(${OVERLAY_FULL_DUR}-${TRIM_START})")
 fi
 
-INNER_W=$(python3 -c "print(round(${BASE_W}*0.88/2)*2)")
+INNER_W=$(python3 -c "print(round(${BASE_W}*0.94/2)*2)")
 INNER_H=$(python3 -c "print(round(${INNER_W}*9/16))")
 BORDER=$(python3 -c "print(max(2, round(${BASE_W}*0.00125)))")
 CARD_W=$((INNER_W + 2 * BORDER))
