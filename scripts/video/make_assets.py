@@ -14,9 +14,11 @@ BASE_INNER_R = 15
 INNER_W = int(sys.argv[1]) if len(sys.argv) > 1 else BASE_INNER_W
 BORDER = int(sys.argv[2]) if len(sys.argv) > 2 else 2
 OUT_DIR = sys.argv[3] if len(sys.argv) > 3 else "."
+# Optional explicit inner height (for non-16:9 cards, e.g. exact-padding
+# requests); defaults to 16:9 like before when omitted.
+INNER_H = int(sys.argv[4]) if len(sys.argv) > 4 else round(INNER_W * 9 / 16)
 
 SCALE = INNER_W / BASE_INNER_W
-INNER_H = round(INNER_W * 9 / 16)
 OUTER_R = round(BASE_OUTER_R * SCALE)
 INNER_R = round(BASE_INNER_R * SCALE)
 CARD_W, CARD_H = INNER_W + 2 * BORDER, INNER_H + 2 * BORDER
