@@ -73,6 +73,12 @@ else
 fi
 INNER_W=$((CARD_W - 2 * BORDER))
 INNER_H=$((CARD_H - 2 * BORDER))
+# yuv420p requires even dimensions; an odd INNER_H/INNER_W makes ffmpeg's
+# scale+pad silently round to a different size than the (odd) mask PNG,
+# breaking alphamerge. Round down to even -- at most 1px absorbed into the
+# bottom/right gap, imperceptible.
+INNER_W=$((INNER_W - INNER_W % 2))
+INNER_H=$((INNER_H - INNER_H % 2))
 Y_HIDDEN=$BASE_H
 
 # Regenerate the border/mask assets sized for this base resolution's card
