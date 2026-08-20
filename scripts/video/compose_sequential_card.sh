@@ -17,9 +17,10 @@ SWIPE_DUR=0.6
 SWITCH_AT=""     # output-timeline second overlay2 takes over from overlay1
 SWIPE_DOWN_AT=""
 PAD_TOP=""; PAD_BOTTOM=""; PAD_LEFT=""; PAD_RIGHT=""
+TRANSITION_DUR=0  # >0 crossfades overlay1 into overlay2 over this many seconds, ending at --switch-at; 0 = hard cut
 
 usage() {
-  echo "Usage: $0 --base BASE.mp4 --overlay1 A.mp4 --overlay2 B.mp4 --switch-at SECONDS --out OUT.mp4 [--start 2.0] [--swipe-dur 0.6] [--swipe-down-at SECONDS] [--pad-top PX --pad-bottom PX --pad-left PX --pad-right PX]"
+  echo "Usage: $0 --base BASE.mp4 --overlay1 A.mp4 --overlay2 B.mp4 --switch-at SECONDS --out OUT.mp4 [--start 2.0] [--swipe-dur 0.6] [--swipe-down-at SECONDS] [--transition-dur SECONDS] [--pad-top PX --pad-bottom PX --pad-left PX --pad-right PX]"
   exit 1
 }
 
@@ -33,6 +34,7 @@ while [[ $# -gt 0 ]]; do
     --start) START="$2"; shift 2 ;;
     --swipe-dur) SWIPE_DUR="$2"; shift 2 ;;
     --swipe-down-at) SWIPE_DOWN_AT="$2"; shift 2 ;;
+    --transition-dur) TRANSITION_DUR="$2"; shift 2 ;;
     --pad-top) PAD_TOP="$2"; shift 2 ;;
     --pad-bottom) PAD_BOTTOM="$2"; shift 2 ;;
     --pad-left) PAD_LEFT="$2"; shift 2 ;;
@@ -85,6 +87,16 @@ T_OUT_END=$(python3 -c "print(${T_OUT_START}+${SWIPE_DUR})")
 
 Y_EXPR="if(lt(t,${START}),${Y_HIDDEN}, if(lt(t,${T_IN_END}), ${Y_HIDDEN}-(${Y_HIDDEN}-${Y_TARGET})*(1-pow(1-(t-${START})/${SWIPE_DUR},3)), if(lt(t,${T_OUT_START}),${Y_TARGET}, if(lt(t,${T_OUT_END}), ${Y_TARGET}+(${Y_HIDDEN}-${Y_TARGET})*pow((t-${T_OUT_START})/${SWIPE_DUR},3), ${Y_HIDDEN}))))"
 
+# xfade needs plain (non-alpha) frames to blend correctly; alpha is added
+# uniformly afterward. offset is set so the crossfade ends exactly at
+# --switch-at, i.e. overlay1's trim boundary.
+if python3 -c "exit(0 if ${TRANSITION_DUR} > 0 else 1)"; then
+  XFADE_OFFSET=$(python3 -c "print(${OVERLAY1_SHOWN_DUR}-${TRANSITION_DUR})")
+  JOIN_FILTER="[v1proc][v2proc]xfade=transition=fade:duration=${TRANSITION_DUR}:offset=${XFADE_OFFSET}[vraw];"
+else
+  JOIN_FILTER="[v1proc][v2proc]concat=n=2:v=1:a=0[vraw];"
+fi
+
 ffmpeg -y \
   -i "$BASE" \
   -i "$OVERLAY1" \
@@ -92,9 +104,10 @@ ffmpeg -y \
   -loop 1 -i "${ASSET_DIR}/gold_border.png" \
   -loop 1 -i "${ASSET_DIR}/inner_mask.png" \
   -filter_complex "
-[1:v]trim=0:${OVERLAY1_SHOWN_DUR},setpts=PTS-STARTPTS,fps=30,scale=${INNER_W}:${INNER_H}:flags=lanczos:force_original_aspect_ratio=decrease,pad=${INNER_W}:${INNER_H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,format=yuva420p[v1proc];
-[2:v]fps=30,scale=${INNER_W}:${INNER_H}:flags=lanczos:force_original_aspect_ratio=decrease,pad=${INNER_W}:${INNER_H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,format=yuva420p[v2proc];
-[v1proc][v2proc]concat=n=2:v=1:a=0[vseq];
+[1:v]trim=0:${OVERLAY1_SHOWN_DUR},setpts=PTS-STARTPTS,fps=30,scale=${INNER_W}:${INNER_H}:flags=lanczos:force_original_aspect_ratio=decrease,pad=${INNER_W}:${INNER_H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1[v1proc];
+[2:v]fps=30,scale=${INNER_W}:${INNER_H}:flags=lanczos:force_original_aspect_ratio=decrease,pad=${INNER_W}:${INNER_H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1[v2proc];
+${JOIN_FILTER}
+[vraw]format=yuva420p[vseq];
 [4:v]format=gray[mask];
 [vseq][mask]alphamerge[trnd];
 [trnd]tpad=stop_duration=${SWIPE_DUR}:stop_mode=clone[tpad];
